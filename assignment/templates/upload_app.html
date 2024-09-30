@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload App Image{% endblock %}
+
+{% block header %}Hello Admin{% endblock %}
+
+{% block content %}
+<div class="upload-container text-center">
+    <h2>Upload App Image</h2>
+    <form method="POST" action="{% url 'upload_image' app.id %}" enctype="multipart/form-data" class="form-group">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="image">Select Image:</label>
+            <input type="file" class="form-control-file" name="image" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Upload Image</button>
+    </form>
+</div>
+{% endblock %}

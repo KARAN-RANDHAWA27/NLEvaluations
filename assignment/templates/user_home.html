@@ -1,0 +1,323 @@
+<!-- templates/user_home.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Home{% endblock %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css">
+    <script>
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.getElementById(tabName).classList.remove('hidden');
+        }
+
+        function showDetail(app) {
+            document.getElementById('appId').value = app.id;
+            document.getElementById('appName').innerText = app.name;
+            document.getElementById('appName2').innerText = app.name;
+            document.getElementById('appLink').innerText = app.appLink;
+            document.getElementById('appImage').src = app.image;
+            document.getElementById('appPoints').innerText = app.points + ' POINTS';
+        
+            const taskImg = document.getElementById('taskImage');
+            const uploadedImg = document.getElementById('uploadedImage');
+            const taskStatus = document.getElementById('taskStatus');
+            const uploadForm = document.getElementById('uploadForm');
+            const statusBox = document.getElementById('statusBox');
+        
+            // Check user_task_completed status
+            if (app.user_task_completed === 'P' || app.user_task_completed === 'S') {
+                taskImg.src = app.screenshot;  // Use the screenshot image
+                taskImg.style.display = 'block';  // Show the task image
+                taskStatus.style.display = 'none';  // Hide the upload message when image is shown
+        
+                // Set status box based on task completion
+                if (app.user_task_completed === 'P') {
+                    statusBox.innerText = 'Pending';
+                    statusBox.style.backgroundColor = '#FDE68A';
+                    statusBox.style.color = '#92400E';
+                } else {
+                    statusBox.innerText = 'Success';
+                    statusBox.style.backgroundColor = '#A7F3D0';
+                    statusBox.style.color = '#065F46';
+                }
+                statusBox.style.display = 'inline-block';
+                uploadForm.style.display = 'none';  // Hide upload form if task is completed
+            } else {
+                taskImg.style.display = 'none';  // Hide task image if not completed
+                statusBox.style.display = 'none';
+                taskStatus.style.display = 'block';  // Show the upload message when no image is shown
+                uploadForm.style.display = 'block';  // Show upload form
+            }
+        
+            showTab('detailAppView');
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const uploadedImage = document.getElementById('uploadedImage');
+            const taskImage = document.getElementById('taskImage');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    uploadedImage.src = e.target.result;
+                    uploadedImage.style.display = 'block';
+                    taskImage.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                uploadedImage.style.display = 'none';
+                taskImage.style.display = 'block';
+            }
+        }
+
+        
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploadForm = document.getElementById('uploadForm');
+            console.log("hello")
+            
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+        
+                    const formData = new FormData();
+                    const fileInput = document.getElementById('taskScreenshot');
+                    const appId = document.getElementById('appId').value;
+                    console.log(appId)
+        
+                    if (fileInput.files.length === 0) {
+                        alert('Please select an image to upload.');
+                        return;
+                    }
+        
+                    formData.append('screenshot', fileInput.files[0]);
+                    formData.append('app', appId);
+                    
+
+                    for (let pair of formData.entries()) {
+                        console.log(`${pair[0]}: ${pair[1]}`);
+                    }
+                    fetch('{% url "user_task_upload" %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': '{{ csrf_token }}',  // Only include CSRF token, NOT 'Content-Type'
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data)
+                        if (data.success) {
+                            alert('Screenshot uploaded successfully!');
+                            showTab('appsTab');  // Go back to the apps tab after successful upload
+                        } else {
+                            alert('Failed to upload screenshot. Please try again.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            }
+        });
+        function logout() {
+            fetch('{% url "logout" %}', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              body: JSON.stringify({ refresh: localStorage.getItem('refresh_token') }) // Assuming you store the refresh token in localStorage
+            })
+              .then((response) => {
+                if (response.ok) {
+                  localStorage.removeItem('refresh_token') // Remove the refresh token from local storage
+                  window.location.href = '{% url "login" %}' // Redirect to home or login page
+                } else {
+                  throw new Error('Failed to log out')
+                }
+              })
+              .catch((error) => {
+                alert('There was a problem logging out: ' + error.message)
+              })
+          }        
+    </script>
+</head>
+
+<body class="min-h-screen bg-gray-100">
+
+    <div class="bg-gray-200 p-4">
+        <h1 class="text-2xl font-bold text-center text-gray-800">Hello User</h1>
+    </div>
+
+    <div class="flex">
+        <aside class="w-64 bg-gray-300 p-4 h-screen shadow-lg">
+            <button onclick="showTab('appsTab')"
+                class="w-full mb-2 bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Home</button>
+            <button onclick="showTab('profileTab')"
+                class="w-full mb-2 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Profile</button>
+            <button onclick="showTab('pointsTab')"
+                class="w-full mb-2 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Points</button>
+            <button onclick="showTab('tasksTab')"
+                class="w-full mb-2 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">Tasks</button>
+            <a href="#" id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white w-full flex items-center justify-start px-4 py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>Logout
+                </a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit"
+                    class="w-full mb-2 bg-red-600 text-white py-2 rounded hover:bg-red-700">Logout</button>
+            </form>
+        </aside>
+
+        <main class="flex-1 p-8">
+            <!-- Apps Tab -->
+            <div id="appsTab" class="tab-content">
+                <h2 class="text-xl font-bold mb-4">Available Apps</h2>
+                <div class="space-y-4">
+                    {% for app in apps %}
+                    <div class="flex justify-between items-center bg-white p-4 rounded-lg shadow hover:shadow-md transition">
+                        <div class="flex items-center">
+                            <img src="{{ app.image }}" alt="{{ app.name }}" class="w-32 h-32 mr-4">
+                            <div class="flex flex-col">
+                                <h2 class="font-semibold text-gray-800">{{ app.name }}</h2>
+                                <button 
+                                    onclick="showDetail({
+                                        id: '{{ app.id }}', 
+                                        name: '{{ app.name }}', 
+                                        appLink: '{{ app.link }}',
+                                        image: '{{ app.image }}', 
+                                        points: '{{ app.points }}', 
+                                        user_task_completed: '{{ app.user_task_completed }}',  
+                                        task_image: '{{ app.task_image|escapejs }}',
+                                        screenshot: '{{ app.screenshot|escapejs }}',
+                                    })" 
+                                    class="text-blue-500 mt-2">
+                                    View in Detail
+                                </button>
+                            </div>
+                        </div>
+                        <span style="background-color: #A7F3D0; color: #065F46; padding: 10px 20px; font-weight: bold;">
+                            {{ app.points }} POINTS
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content p-4 rounded-lg shadow-md bg-white hidden">
+                <div class="profile-header text-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Your Profile</h2>
+                    <hr class="my-2 border-gray-300">
+                </div>
+                <div class="profile-info text-lg text-gray-700">
+                    <p><strong>Username:</strong> {{ user_profile.username }}</p>
+                    <p><strong>Email:</strong> {{ user_profile.email }}</p>
+                </div>
+                
+            </div>
+            
+
+            <!-- Points Tab -->
+            <div id="pointsTab" class="tab-content hidden p-4 rounded-lg shadow-md bg-white">
+                <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">Total Points</h2>
+                <div class="text-center">
+                    <p class="text-4xl font-semibold text-indigo-600">{{ total_points }} <span class="text-lg">POINTS</span></p>
+                </div>
+            </div>            
+
+            <!-- Tasks Tab -->
+            <div id="tasksTab" class="tab-content hidden p-4 rounded-lg shadow-md bg-white">
+                <h2 class="text-xl font-bold mb-4">Your Tasks</h2>
+                {% if tasks %}
+                    <ul class="list-disc pl-5 text-lg text-gray-700">
+                        {% for task in tasks %}
+                            <li>{{ task.app__name }} - 
+                                {% if task.completed == 'P' %}
+                                    <span class="text-yellow-600 font-semibold">Pending</span>
+                                {% elif task.completed == 'S' %}
+                                    <span class="text-green-600 font-semibold">Success</span>
+                                {% else %}
+                                    <span class="text-red-600 font-semibold">Pending</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-lg text-gray-500">No tasks completed yet.</p>
+                {% endif %}
+            </div>
+            
+
+            <div id="detailAppView" class="tab-content hidden">
+                <h2 class="text-xl font-bold mb-4 flex justify-between">
+                    <span class="text-blue-500 ml-2 border-b border-blue-500" id="appName"></span>
+                    <a href="javascript:showTab('appsTab')" class="text-blue-500 ml-2">&lt; Back</a>
+                </h2>
+            
+                <div class="container my-5 p-4 bg-gray-100 rounded-lg shadow-md">
+                    <!-- App Header (Image + Info) -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-center">
+                            <img id="appImage" src="{% static 'images/placeholder.svg' %}" alt="App Logo" class="w-32 h-auto rounded-lg mr-6">
+                            <div>
+                                <h3 id="appName2" class="text-2xl font-semibold mb-1"></h3>
+                                <a id="appLink" class="text-blue-500" href="#">App Link</a>
+                            </div>
+                        </div>
+                        <!-- Points + Status -->
+                        <div class="text-right">
+                            <span id="appPoints" class="bg-green-100 text-green-700 font-semibold py-2 px-4 rounded-lg inline-block mb-2"></span>
+                            <div id="statusBox" class="text-sm font-semibold py-2 px-4 rounded-lg"
+                                style="background-color: #FDE68A; color: #92400E; display: none;">Pending</div>
+                        </div>
+                    </div>
+            
+                    <!-- Task Image/Upload Section -->
+                    <div class="border-2 border-dashed border-gray-300 p-4 rounded-lg">
+                        <div class="flex items-center justify-center mb-4">
+                            <img id="taskImage" src="{% static 'images/placeholder.svg' %}" alt="Task Screenshot" class="w-32 h-auto rounded-lg"
+                                style="display: none;">
+                            <img id="uploadedImage" class="w-32 h-auto rounded-lg" style="display: none;">
+                        </div>
+            
+                        <p id="taskStatus" class="text-center text-gray-500 mb-4">Upload Screenshots to complete the TASK</p>
+            
+                        <!-- Upload Form (Conditionally Hidden) -->
+                        <form id="uploadForm" enctype="multipart/form-data" class="text-center">
+                            <input type="file" id="taskScreenshot" class="border border-gray-300 rounded p-2 mb-4" accept="image/*" onchange="previewImage(event)">
+                            <input type="hidden" id="appId" name="appId">
+                            <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Submit</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JSON Data for Apps -->
+            <script id="app-data" type="application/json">
+        {{ apps|json_script:"app-data" }}
+      </script>
+        </main>
+    </div>
+
+</body>
+
+</html>
+{% endblock %}

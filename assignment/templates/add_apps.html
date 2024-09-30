@@ -1,0 +1,228 @@
+<!-- templates/add_apps.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+  Add Apps
+{% endblock %}
+
+{% block content %}
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Add Apps</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" />
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body class="min-h-screen bg-gray-100">
+      <div class="bg-gray-200 p-4">
+        <h1 class="text-2xl font-bold text-center">Hello Admin</h1>
+      </div>
+
+      <div class="flex">
+        <aside class="w-64 bg-gray-200 p-4 h-screen">
+          <a href="{% url 'home' %}" class="border border-gray-400 w-full mb-2 flex items-center justify-start px-4 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>Home
+          </a>
+
+          <button class="bg-indigo-600 hover:bg-indigo-700 text-white w-full flex items-center justify-start px-4 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>Add Apps
+          </button>
+
+          <a href="{% url 'admin_task_review' %}" class="border border-gray-400 w-full mb-2 flex items-center justify-start px-4 py-2">Task Review</a>
+          <a href="#" id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white w-full flex items-center justify-start px-4 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>Logout
+          </a>
+        </aside>
+
+        <main class="flex-1 p-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <div id="errorMessages" class="hidden bg-red-500 text-white p-4 rounded"></div>
+            <div class="flex justify-center mb-6">
+              <div class="w-32 h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                <img id="imagePreview" class="w-full h-full object-cover rounded-lg" src="" alt="Image Preview" style="display: none;" />
+                <svg id="defaultImage" class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+            </div>
+
+            <form class="space-y-4" id="appForm" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+
+              <p id="pointsTopError" class="text-red-500 text-sm hidden"></p>
+              <input type="file" accept="image/*" class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="appImage" name="image" required />
+              <p id="imageError" class="text-red-500 text-sm hidden"></p>
+
+              <input type="text" placeholder="App Name" class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="appName" name="name" required />
+              <p id="nameError" class="text-red-500 text-sm hidden"></p>
+
+              <input type="text" placeholder="App Link" class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="appLink" name="link" required />
+              <p id="linkError" class="text-red-500 text-sm hidden"></p>
+
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <select class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="category" name="category">
+                    <option value="" disabled selected>App Category</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Social Media">Social Media</option>
+                  </select>
+                  <p id="categoryError" class="text-red-500 text-sm hidden mt-1"></p>
+                </div>
+
+                <div>
+                  <select class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="subCategory" name="sub_category">
+                    <option value="" disabled selected>Sub Category</option>
+                    <option value="Type1">Type 1</option>
+                    <option value="Type2">Type 2</option>
+                  </select>
+                  <p id="subCategoryError" class="text-red-500 text-sm hidden mt-1"></p>
+                </div>
+              </div>
+
+              <input type="hidden" id="pointsInput" name="points" />
+
+              <div class="flex justify-center mt-4">
+                <button type="button" id="addPointsButton" class="w-58 flex justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">ADD POINTS</button>
+              </div>
+
+              <div class="flex justify-center mt-4">
+                <button type="submit" class="w-58 flex justify-center bg-green-500 hover:bg-teal-600 text-black px-4 py-2 rounded-lg font-bold">SUBMIT APP</button>
+              </div>
+            </form>
+
+            <div id="pointsModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+              <div class="bg-white rounded-lg p-6 w-1/3">
+                <h2 class="text-xl font-bold mb-4">Add Points</h2>
+                <input type="number" placeholder="Enter Points" class="w-full border border-gray-300 px-3 py-2 rounded-lg" id="modalPointsInput" required />
+                <div class="flex justify-end mt-4">
+                  <button id="modalSubmit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">Submit</button>
+                  <button id="modalClose" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg ml-2">Close</button>
+                </div>
+              </div>
+            </div>
+
+            <script>
+              document.getElementById('appImage').addEventListener('change', function (event) {
+                const file = event.target.files[0]
+                const imagePreview = document.getElementById('imagePreview')
+                const defaultImage = document.getElementById('defaultImage')
+              
+                if (file) {
+                  const reader = new FileReader()
+                  reader.onload = function (e) {
+                    imagePreview.src = e.target.result
+                    imagePreview.style.display = 'block'
+                    defaultImage.style.display = 'none'
+                  }
+                  reader.readAsDataURL(file)
+                } else {
+                  imagePreview.style.display = 'none'
+                  defaultImage.style.display = 'block'
+                }
+              })
+              
+              document.getElementById('appForm').addEventListener('submit', function (event) {
+                event.preventDefault()
+              
+                // Clear previous errors
+                document.querySelectorAll('.text-red-500').forEach((el) => el.classList.add('hidden'))
+              
+                const formData = new FormData(this) // Create a FormData object from the form
+              
+                fetch('{% url "app_create" %}', {
+                  method: 'POST',
+                  body: formData,
+                  headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                  }
+                })
+                  .then((response) => {
+                    if (!response.ok) {
+                      return response.json().then((data) => {
+                        throw data.errors
+                      })
+                    }
+                    return response.json() // Parse the JSON response
+                  })
+                  .then((data) => {
+                    console.log('Success:', data)
+                    document.getElementById('appForm').reset()
+                    document.getElementById('imagePreview').style.display = 'none'
+                    document.getElementById('defaultImage').style.display = 'block'
+                  })
+                  .catch((errors) => {
+                    // Displaying each error below the corresponding input field
+                    if (errors.link) {
+                      document.getElementById('linkError').innerText = errors.link[0]
+                      document.getElementById('linkError').classList.remove('hidden')
+                    }
+                    if (errors.category) {
+                      document.getElementById('categoryError').innerText = errors.category[0]
+                      document.getElementById('categoryError').classList.remove('hidden')
+                    }
+                    if (errors.sub_category) {
+                      document.getElementById('subCategoryError').innerText = errors.sub_category[0]
+                      document.getElementById('subCategoryError').classList.remove('hidden')
+                    }
+                    if (errors.points) {
+                      document.getElementById('pointsTopError').innerText = `Points: ${errors.points[0]}`
+                      document.getElementById('pointsTopError').classList.remove('hidden')
+                    }
+                  })
+              })
+              
+              document.getElementById('addPointsButton').addEventListener('click', function () {
+                document.getElementById('pointsModal').classList.remove('hidden')
+              })
+              
+              // Close modal
+              document.getElementById('modalClose').addEventListener('click', function () {
+                document.getElementById('pointsModal').classList.add('hidden')
+              })
+              
+              // Handle points submission from modal
+              document.getElementById('modalSubmit').addEventListener('click', function () {
+                const points = document.getElementById('modalPointsInput').value
+                document.getElementById('pointsInput').value = points
+                document.getElementById('pointsModal').classList.add('hidden')
+              })
+              
+              function logout() {
+                fetch('{% url "logout" %}', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                  },
+                  body: JSON.stringify({ refresh: localStorage.getItem('refresh_token') }) // Assuming you store the refresh token in localStorage
+                })
+                  .then((response) => {
+                    if (response.ok) {
+                      localStorage.removeItem('refresh_token') // Remove the refresh token from local storage
+                      window.location.href = '{% url "login" %}' // Redirect to home or login page
+                    } else {
+                      throw new Error('Failed to log out')
+                    }
+                  })
+                  .catch((error) => {
+                    alert('There was a problem logging out: ' + error.message)
+                  })
+              }
+            </script>
+          </div>
+        </main>
+      </div>
+    </body>
+  </html>
+{% endblock %}

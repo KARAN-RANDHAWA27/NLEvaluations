@@ -1,0 +1,55 @@
+Question 1
+1) Write a regex to extract all the numbers with orange color background from the below text in italics (Output should be a list).
+
+
+{"orders":[{"id":1},{"id":2},{"id":3},{"id":4},{"id":5},{"id":6},{"id":7},{"id":8},{"id":9},{"id":10},{"id":11},{"id":648},{"id":649},{"id":650},{"id":651},{"id":652},{"id":653}],"errors":[{"code":3,"message":"[PHP Warning #2] count(): Parameter must be an array or an object that implements Countable (153)"}]}
+
+
+Solution:
+
+import re
+
+# Sample text
+text = '{"orders":[{"id":1},{"id":2},{"id":3},{"id":4},{"id":5},{"id":6},{"id":7},{"id":8},{"id":9},{"id":10},{"id":11},{"id":648},{"id":649},{"id":650},{"id":651},{"id":652},{"id":653}],"errors":[{"code":3,"message":"[PHP Warning #2] count(): Parameter must be an array or an object that implements Countable (153)"}]}'
+
+# Regex to extract all "id" numbers in the orders array
+ids = re.findall(r'"id":(\d+)', text)
+
+# Convert them to a list of integers
+ids = list(map(int, ids))
+print(ids)
+
+
+
+Question 3
+A. Write and share a small note about your choice of system to schedule periodic tasks (such as downloading a list of ISINs every 24 hours). Why did you choose it? Is it reliable enough; Or will it scale? If not, what are the problems with it? And, what else would you recommend to fix this problem at scale in production?
+
+Answer:
+
+For scheduling periodic tasks like downloading a list of ISINs every 24 hours, I would choose Celery with Django in combination with Celery Beat for scheduling.
+
+Why I Chose It:
+Integration with Django: Celery works seamlessly with Django and can handle both periodic tasks and background jobs. This makes it easier to manage within a Django application, leveraging existing models and configurations.
+Task Scheduling with Celery Beat: Celery Beat allows for the scheduling of periodic tasks such as the 24-hour ISIN download. It manages scheduling within the same ecosystem, which is convenient.
+
+Reliability and Scalability:
+Asynchronous Task Processing: Celery excels at handling tasks asynchronously, allowing for non-blocking, scalable processing, which is crucial for systems needing high throughput.
+Redis or RabbitMQ Backend: Celery uses message brokers like Redis or RabbitMQ, which are robust and reliable for handling task queues at scale.
+
+Is It Reliable Enough?
+Celery is reliable for most small to medium-scale applications. It can handle large task loads provided it is configured properly with a stable message broker and backend. Additionally, Celery supports task retrying and logging, which ensures that tasks are not lost in case of failure.
+
+Scaling Considerations:
+Concurrency: Celery scales horizontally by adding more worker processes, allowing it to handle more tasks concurrently.
+Redis/RabbitMQ: These backends can handle large volumes of task queues and messages, but need to be scaled appropriately as the number of tasks grows.
+Potential Problems at Scale:
+Single Point of Failure: Celery Beat’s task scheduling can be a single point of failure in some configurations. If Celery Beat crashes or fails, periodic tasks might not run as scheduled.
+Message Broker Limits: While Redis and RabbitMQ can scale, they need proper configuration and monitoring. Redis, for example, might face memory issues if the task queue grows too large.
+Delayed Tasks at Scale: If you schedule too many periodic tasks or if tasks take too long to process, Celery workers can get bogged down, causing delays in task execution.
+No Native Monitoring: Celery requires external monitoring tools like Flower or Prometheus for proper health checks and scaling insights.
+Alternatives for Better Scalability:
+Kubernetes CronJobs: For a large-scale production environment, Kubernetes CronJobs might be a better alternative. They are resilient and can automatically reschedule failed jobs.
+Airflow: For more complex, enterprise-grade scheduling workflows, Apache Airflow offers powerful scheduling, monitoring, and logging features. It is more suitable for large-scale data workflows and has better failover mechanisms.
+AWS Lambda with EventBridge: If the application is on AWS, using AWS Lambda combined with EventBridge (CloudWatch) for scheduling could offer a fully managed, scalable, and cost-effective solution for periodic tasks.
+
+

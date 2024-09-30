@@ -1,0 +1,84 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}
+  Home
+{% endblock %}
+
+{% block content %}
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Home</title>
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" />
+    </head>
+    <body class="min-h-screen bg-gray-100">
+      <div class="bg-gray-200 p-4">
+        <h1 class="text-2xl font-bold text-center">Hello Admin</h1>
+      </div>
+
+      <div class="flex">
+        <aside class="w-64 bg-gray-200 p-4 h-screen">
+          <a href="{% url 'home' %}" class="border border-gray-400 w-full mb-2 flex items-center justify-start px-4 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>Home
+          </a>
+          <a href="{% url 'app_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full flex items-center justify-start px-4 py-2 mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>Add Apps
+          </a>
+          <a href="{% url 'admin_task_review' %}" class="border border-gray-400 w-full mb-2 flex items-center justify-start px-4 py-2">Task Review</a>
+          <a href="#" id="logoutButton" class="bg-red-600 hover:bg-red-700 text-white w-full flex items-center justify-start px-4 py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>Logout
+          </a>
+        </aside>
+
+        <main class="flex-1 p-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-bold mb-4">Available Apps</h2>
+            <div class="space-y-4">
+              {% for app in apps %}
+                <div class="flex justify-between items-center bg-gray-100 p-4 rounded-lg">
+                  <div class="flex items-center">
+                    <img src="{{ app.image.url }}" alt="{{ app.name }}" class="w-16 h-16 mr-2" />
+                    <span class="font-semibold">{{ app.name }}</span>
+                  </div>
+                  <span style="background-color: #A7F3D0; color: #065F46; padding: 10px 20px; font-weight: bold;">{{ app.points }} POINTS</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </main>
+      </div>
+      <script>
+        document.getElementById('logoutButton').addEventListener('click', function () {
+          fetch('/api/logout/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+            }
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.detail)
+              // Redirect to login or home page after logout
+              window.location.href = '/api/login/'
+            })
+            .catch((error) => {
+              console.error('There was a problem logging out:', error)
+            })
+        })
+      </script>
+    </body>
+  </html>
+{% endblock %}
